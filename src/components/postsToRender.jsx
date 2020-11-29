@@ -4,7 +4,6 @@ import ImageCard from "./imageCard";
 const Posts = (props) => {return (
     <>
       {props.postsToRender.map((post, index) => {
-        // console.log(`${post.name}${index}`);
         return <ImageCard 
           key={`${post.name}${index}`} 
           postsToRender={post} 

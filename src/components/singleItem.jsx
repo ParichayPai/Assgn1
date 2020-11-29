@@ -4,6 +4,8 @@ import { useHistory } from "react-router-dom";
 import Comment from "./comment";
 import Header from "./header";
 
+const backendUrl = "http://localhost:5000/api/v1/"
+
 const useStyles = makeStyles(() => ({
     singleItem: {
         marginLeft: 50,
@@ -26,7 +28,10 @@ const useStyles = makeStyles(() => ({
         // borderColor: "black"
     },
     description: {
+        width: "60%",
+        fontFamily: "monospace",
         marginLeft: 20,
+        fontSize: 20
     },
     commentSection: {
         marginTop: 20,
@@ -45,8 +50,22 @@ const useStyles = makeStyles(() => ({
 export default function SingleItem(props){
     const style = useStyles();
     const history = useHistory();
-    // console.log(props.location.state);
-    let {name, pic, description, comments} = props.location.state;
+    let {name, pic, description, comments, id} = props.location.state;
+    let saveData = props.location.saveData;
+    // console.log(props.location);
+
+    const [commentArr, setCommentArr] = React.useState([]);
+    const [commentData, setCommentData] = React.useState('');
+
+    const getComments = () => {
+        fetch(backendUrl+"assets/"+id, {
+            method : "get",
+        }).then(res => res.json())
+            .then(res2 => {setCommentArr(res2)});
+    }
+    React.useEffect(() => {
+        getComments();
+    }, []);
 
     const backFunction = () => {
         history.push("/assets");
@@ -72,13 +91,27 @@ export default function SingleItem(props){
             </div>
             <hr />
             <div className={style.commentSection}>
-                {comments.map(
-                    comment => <Comment key={Object.values(comment)} data={comment} />
-                )}
+                {commentArr.length === 0 ? 
+                <div><h4>No Comments</h4></div>:
+                    commentArr.map(
+                        comment => <Comment key={Object.values(comment)} data={comment} />
+                    )    
+                }
                 <div className={style.newComment}>
-                    <textarea name="newComment" id="" cols="70" rows="13"></textarea>
+                    <textarea 
+                        name="newComment" 
+                        id="" 
+                        cols="70" 
+                        rows="13" 
+                        value={commentData}
+                        onChange={(e) => setCommentData(e.target.value)}
+                        ></textarea>
                 </div>
-                <Button variant="contained">Post Comment</Button>
+                <Button 
+                    variant="contained" 
+                    onClick={props.location.postComment(id, commentData)}
+                >Post Comment
+                </Button>
             </div>
         </div>
     </>)

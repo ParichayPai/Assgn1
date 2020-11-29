@@ -1,45 +1,46 @@
 import '../App.css';
 import React from "react";
 import Header from "./header"
-import {Button} from "@material-ui/core";
+// import {Button} from "@material-ui/core";
 import AddButton from "./addButton"
-import Posts from "./postsToRender"
-import data from "../listOfImgs"
-let arrayForHoldingPosts = [];
+// import Posts from "./postsToRender"
+import ImageCard from "./imageCard"
+import { useHistory } from 'react-router-dom';
+import { convertToRaw, EditorState } from 'draft-js';
+// import Comment from './comment';
+
+const backendUrl = "http://localhost:5000/api/v1/"
 
 function Home() {
-    const postsPerPage = 3;
-    // const [startSize, setStartSize] = React.useState(true);
-    // const [baseSize, setBaseSize] = React.useState(9);
-    let baseSize = 9;
+    const history = useHistory();
+    // const postsPerPage = 3;
+    // let baseSize = 9;
+    // const [data, setData] = React.useState([]);
     const [imageList, setImageList] = React.useState([]);
-    const [next, setNext] = React.useState(9);
 
-    const loopWithSlice = (start, end) => {
-        const slicedPosts = data.slice(start, end);
-        arrayForHoldingPosts = [...arrayForHoldingPosts, ...slicedPosts];
-        setImageList(arrayForHoldingPosts);
-    };
+    const getData = () => {
+        fetch(backendUrl+"assets", {
+            method : "get",
+        }).then(res => res.json())
+            .then(res2 => {setImageList(res2)});
+    }
 
     React.useEffect(() => {
-        //   if(startSize){
-            loopWithSlice(0, baseSize);
-        //       setStartSize(false);
-        //   }
+        getData();
     }, []);
 
-    const handleShowMorePosts = () => {
-        if(next > data.length){
-            return;
-        }
-        loopWithSlice(next, next + postsPerPage);
-        setNext(next + postsPerPage);
-    };
+    // const handleShowMorePosts = () => {
+    //     if(next > data.length){
+    //         return;
+    //     }
+    //     loopWithSlice(next, next + postsPerPage);
+    //     setNext(next + postsPerPage);
+    // };
 
-    const handleDelete = (index) => {
-        const listOfPosts = [...arrayForHoldingPosts];
-        listOfPosts.splice(index, 1);
-        setImageList(listOfPosts);
+    const handleDelete = (id) => {
+        fetch(backendUrl+"assets/"+id, {
+            method : "delete",
+        }).then(getData());
     };
 
     const onDragOver = (e) => {
@@ -64,25 +65,49 @@ function Home() {
         ]);    
     }
 
-    const saveData = (title, desc, keywords, pic) => {
-        // console.log(title);
-        // console.log(desc["_immutable"]["currentContent"]["blockMap"]["_list"]["_tail"]["array"][0][1]["text"]);
-        // console.log(keywords);
-        // console.log(pic);
+    const saveData = (title, desc, keywords, pic, taskName, id) => {
 
-        let description = desc["_immutable"]["currentContent"]["blockMap"]["_list"]["_tail"]["array"][0][1]["text"];
+        // console.log(convertToRaw(desc.getCurrentContent()).blocks[0].text);
 
+        // let description = desc["_immutable"]["currentContent"]["blockMap"]["_list"]["_tail"]["array"][0][1]["text"];
+        
         let post = {
             title,
-            description,
+            description: convertToRaw(desc.getCurrentContent()).blocks[0].text,
             keywords,
             pic
         }
-        console.log(post);
-        setImageList([
-            post,
-            ...imageList
-        ])
+
+        if(taskName === "Add"){
+            fetch(backendUrl+"assets/", {
+                method : "post",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(post)
+            }).then(res => res.json())
+                .then(res2 => setImageList([res2, ...imageList]));
+            history.push("/assets");
+        }else{
+            fetch(backendUrl+"assets/"+id, {
+                method : "put",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(post)
+            }).then(getData());
+        // .then(res => res.json())
+            // .then(res2 => setImageList([...imageList, res2]));
+        history.push("/assets");
+        }
+    }
+    
+    const postComment = (id, commentData) => {
+        fetch(backendUrl+"assets/comments/"+id, {
+            method : "put",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({commentData})
+        })
+            .then(res => res.json())
+            .then(result => {
+               console.log(result);
+            })
     }
 
     return (
@@ -95,21 +120,34 @@ function Home() {
             <div className="home"> 
             {(imageList.length === 0) ? 
             <div className={"center"}>{"No Documents Added!"}</div> 
-            : <Posts 
-                postsToRender={imageList} 
-                delete={handleDelete} 
-                onDragOver={onDragOver}
-                onDragStart={onDragStart}
-                onDrop={onDrop}
+            // : <Posts 
+            //     postsToRender={imageList} 
+            //     delete={handleDelete} 
+            //     onDragOver={onDragOver}
+            //     onDragStart={onDragStart}
+            //     onDrop={onDrop}
+            //     />
+            : imageList.map((post, index) => {
+                return <ImageCard 
+                    data={post}
+                    key={`${post.name}${index}`} 
+                    handleDelete={handleDelete} 
+                    index={index}
+                    onDragOver={onDragOver}
+                    onDragStart={onDragStart}
+                    onDrop={onDrop}
+                    saveData={saveData}
+                    postComment={postComment}
                 />
+            })
             }
             
             </div>
-            <Button 
+            {/* <Button 
                 onClick={handleShowMorePosts} 
                 disabled={next>=data.length}
                 variant={"contained"}
-            >Load more</Button>
+            >Load more</Button> */}
         </div>
         </>
     );

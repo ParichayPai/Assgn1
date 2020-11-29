@@ -21,7 +21,7 @@ export default function DeleteDialog(props) {
   const style = useStyles();
 
   const handleDelete = () => {
-    props.delete(props.index);
+    props.delete(props.id);
     props.openDeleteDialog();
   }
 

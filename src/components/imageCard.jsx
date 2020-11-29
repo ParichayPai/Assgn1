@@ -22,8 +22,8 @@ const useStyles = makeStyles((theme) => ({
 const ImageCard = (props) => {
     let history = useHistory();
     const classes = useStyles();
-    let {name, pic, description, comments} = props.postsToRender;
-    // console.log(props.postsToRender.comments);
+    let {title, pic, description, comments} = props.data;
+    let id = props.data._id;
 
     const [openDialogue, setOpenDialogue] = React.useState(false);
     const [deleteDialogue, setDeleteDialogue] = React.useState(false);
@@ -36,17 +36,19 @@ const ImageCard = (props) => {
         setDeleteDialogue(!deleteDialogue);
     }
 
-    // ()=>props.handleDelete(props.index)
-
-    const handleClick = (name, pic, description, index) => {
+    const handleClick = (id, name, pic, description, index, saveData, postComment) => {
         history.push({
             pathname: `/assets/${index}/`,
             search: `?name=${name}`,
-            state: { name,
-                    pic,
-                    description,
-                    comments
-                }
+            state: { 
+                id,
+                name,
+                pic,
+                description,
+                comments,
+            },
+            saveData: saveData,
+            postComment: postComment
         })
     }
    
@@ -83,10 +85,10 @@ const ImageCard = (props) => {
             draggable 
             onDragStart={(e) => props.onDragStart(e, props.key)}
             onDragOver={(e) => props.onDragOver(e)} 
-            onDrop={(e) => props.onDrop(e, "dropped")}
+            onDrop={(e) => props.onDrop(e, "dropped")} 
         >
             <Box>
-                <div className={"imgContainer"} onClick={() => handleClick(name, pic, description, props.index)}>
+                <div className={"imgContainer"} onClick={() => handleClick(id, title, pic, description, props.index, props.saveData, props.postComment)}>
                 <Box>
                     <img src={logo} alt={"Logo"} className={"image"} draggable="false"/>
                 </Box>
@@ -94,7 +96,7 @@ const ImageCard = (props) => {
                 
                 <hr/>
                 <div className={"cardBody"}>
-                    <Typography variant="h5" className={"cardName"}>{name}</Typography>
+                    <Typography variant="h5" className={"cardName"}>{title}</Typography>
                     <IconButton aria-label="delete" className={classes.margin} onClick={()=>handleOpenDialogue()} >
                         <EditIcon />
                     </IconButton>
@@ -106,18 +108,18 @@ const ImageCard = (props) => {
         </Paper>
         {openDialogue ? <CustomDialog
             taskName={"Edit"}
-            // companyName={companyName}
-            // description={description}
+            data={props.data}
+            saveData={props.saveData}
             image={logo}    
             openDialogue={handleOpenDialogue}
             open={openDialogue}
             /> : null}
         {deleteDialogue ? <DeleteDialog 
-            name={name}
+            name={title}
             open={deleteDialogue}
             openDeleteDialog={handleDeleteDialogue}
             delete={props.handleDelete}
-            index={props.index}
+            id={id}
         /> : null}
         </>
     )

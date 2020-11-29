@@ -11,6 +11,7 @@ import { Divider, IconButton } from '@material-ui/core';
 import { Editor } from 'react-draft-wysiwyg';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import DeleteIcon from '@material-ui/icons/Delete';
+import { ContentState, convertToRaw, EditorState } from 'draft-js';
 
 const useStyles = makeStyles((theme) => ({
   backButton: {
@@ -46,11 +47,15 @@ const useStyles = makeStyles((theme) => ({
 
 
 export default function CustomDialog(props) {
+  let data = props.data;
+  let id = data? data._id: null;
+  // console.log(data);
 
-  const [editorState, setEditorState] = React.useState("");
-  const [title, setTitle] = React.useState("");
-  const [keywords, setKeywords] = React.useState("");
+  const [editorState, setEditorState] = React.useState(data? EditorState.createWithContent(ContentState.createFromText(data.description)): "");
+  const [title, setTitle] = React.useState(data ? data.title : "");
+  const [keywords, setKeywords] = React.useState(data ? data.keywords : "");
   const [inpDoc, setInputDoc] = React.useState({});
+
 
   const onEditorStateChange = (editorState) => {
       setEditorState(editorState);
@@ -60,9 +65,9 @@ export default function CustomDialog(props) {
   //     console.log(event.target.files[0]);
   // }
 
-  const clearInputFile = (doc) => {
-    console.log(doc);
-  }
+  // const clearInputFile = (doc) => {
+  //   console.log(doc);
+  // }
 
   const style = useStyles();
 
@@ -100,6 +105,7 @@ export default function CustomDialog(props) {
             <div className={"inputBox"}>
           <Editor
             editorState={editorState}
+            value={props.description}
             onEditorStateChange={onEditorStateChange}
           />
           </div>
@@ -123,6 +129,7 @@ export default function CustomDialog(props) {
               // value={inpDoc}
               // onChange={(e) => setInputDoc(e.target.files[0])}  
             />
+            
             <IconButton 
               aria-label="delete" 
               className={style.delBtn} 
@@ -137,14 +144,27 @@ export default function CustomDialog(props) {
           <Button 
             variant="contained"
             onClick={() => {
-              props.saveData(title, editorState, keywords, inpDoc)
+              props.saveData(title, editorState, keywords, inpDoc, props.taskName, id)
+              props.openDialogue()
+            }} 
+            color="primary"
+            className={style.saveButton}  
+            disabled={!title} //&& convertToRaw(editorState.getCurrentContent()).blocks[0].text}
+          >
+            Save
+          </Button> 
+          {/* : <Button 
+            variant="contained"
+            onClick={() => {
+              props.saveEditData(title, editorState, keywords, inpDoc)
               props.openDialogue()
             }} 
             color="primary"
             className={style.saveButton}  
           >
             Save
-          </Button>
+          </Button> */}
+          {/* } */}
         </DialogActions>
       </Dialog>
     </div>
